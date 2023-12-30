@@ -7,10 +7,9 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 import yagmail.error
 
-# Loading the pneumonia detection model
-model = load_model("/Users/jensontmathew/Documents/My_Projects/Pneumonia_detection/pneumonia.h5")
+xray_model = load_model("//Users/jensontmathew/Documents/My_Projects/Pneumonia_detection/chest1.h5")
+pneumonia_model = load_model("/Users/jensontmathew/Documents/My_Projects/Pneumonia_detection/pneumonia.h5")
 
-# Database connection configuration
 db_config = {
     'host': 'localhost',
     'user': 'root',
@@ -25,8 +24,6 @@ email_config = {
     'smtp_port': '587',
     'sender_app_password':'whwo hiiw cwhj ttpa'
 }
-
-# Function to predict pneumonia with a confidence threshold
 def predict_pneumonia(img, confidence_threshold=0.5):
     input_shape = (224, 224)
     img = cv2.resize(img, input_shape)
@@ -34,24 +31,11 @@ def predict_pneumonia(img, confidence_threshold=0.5):
     img = np.expand_dims(img, axis=0)
     img /= 255.0
 
-    prediction = model.predict(img)
+    prediction = pneumonia_model.predict(img)
     pneumonia_probability = prediction[0][0]
     pneumonia_result = 'Pneumonia Detected' if pneumonia_probability > confidence_threshold else 'Normal'
 
     return pneumonia_probability, pneumonia_result
-
-###
-
-def is_chest_xray(img):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    edges = cv2.Canny(gray, 50, 150, apertureSize=3)
-    lines = cv2.HoughLines(edges, 1, np.pi / 180, 200)
-
-    if lines is not None:
-        return True  # It's a chest X-ray
-    else:
-        return False  # Not a chest X-ray
-####
 
 def save_to_database(patient_name, patient_email, phone_number, doctor_name, pneumonia_probability):
     try:
@@ -92,7 +76,8 @@ def send_email(patient_name, recipient_email, pneumonia_result):
 
     finally:
         yag.close()
-# Streamlit app
+
+
 def main():
     st.title("Pneumonia Detection")
     st.sidebar.title("Upload Patient Information")
@@ -101,12 +86,17 @@ def main():
     phone_number = st.sidebar.text_input("Phone Number")
     doctor_name = st.sidebar.text_input("Doctor Name")
 
-    uploaded_file = st.sidebar.file_uploader("Choose a chest X-ray image", type=["jpg", "jpeg", "png"])
+    uploaded_file = st.sidebar.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
     if uploaded_file is not None and st.sidebar.button("Predict and Save"):
         image_bytes = uploaded_file.read()
         frame = cv2.imdecode(np.frombuffer(image_bytes, dtype=np.uint8), 1)
 
-        if is_chest_xray(frame):
+        resized_frame = cv2.resize(frame, (224, 224))
+        xray_prediction = xray_model.predict(np.expand_dims(resized_frame, axis=0))
+
+        is_xray = True if np.argmax(xray_prediction, axis=1)[0] == 1 else False
+
+        if is_xray:
             pneumonia_probability, prediction_text = predict_pneumonia(frame)
             st.image(frame, caption='Uploaded Image', use_column_width=True)
 
