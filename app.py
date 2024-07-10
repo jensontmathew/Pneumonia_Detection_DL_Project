@@ -19,7 +19,7 @@ db_config = {
 
 email_config = {
     'sender_email': 'jensontmathew020@gmail.com',
-    'sender_password': 'jensonjenson',
+    'sender_password': 'password',
     'smtp_server': 'smtp.gmail.com',
     'smtp_port': '587',
     'sender_app_password':'whwo hiiw cwhj ttpa'
