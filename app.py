@@ -13,7 +13,7 @@ pneumonia_model = load_model("/Users/jensontmathew/Documents/My_Projects/Pneumon
 db_config = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'Password@123',
+    'password': 'Password',
     'database': 'DL_Projects'
 }
 
